@@ -868,4 +868,12 @@ glusterd_check_brick_order(dict_t *dict, char *err_str, int32_t type,
                            int32_t sub_count, int flag);
 gf_boolean_t
 glusterd_gf_is_local_addr(char *hostname);
+int32_t
+glusterd_add_volume_to_hashtable(xlator_t *this, char *volname,
+                                 glusterd_volinfo_t *volinfo);
+void
+glusterd_remove_volume_from_hashtable(glusterd_volinfo_t *volinfo,
+                                      char *volname);
+void
+glusterd_destroy_volinfo_node(struct rcu_head *head);
 #endif
