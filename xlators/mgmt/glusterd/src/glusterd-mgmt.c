@@ -268,6 +268,15 @@ gd_mgmt_v3_brick_op_fn(glusterd_op_t op, dict_t *dict, char **op_errstr,
             }
             break;
         }
+        case GD_OP_REMOVE_BRICK: {
+            ret = glusterd_remove_brick_brickop(this, dict, op_errstr);
+            if (ret) {
+                gf_msg(this->name, GF_LOG_WARNING, 0, GD_MSG_BRICK_OP_FAIL,
+                       "Remove brick brickop failed");
+                goto out;
+            }
+            break;
+        }
         case GD_OP_PROFILE_VOLUME:
         case GD_OP_REBALANCE:
         case GD_OP_DEFRAG_BRICK_VOLUME: {
@@ -2850,7 +2859,7 @@ out:
 }
 
 int32_t
-glusterd_mgmt_v3_initiate_snap_phases(rpcsvc_request_t *req, glusterd_op_t op,
+glusterd_mgmt_v3_initiate_phases_with_brick_op_and_barrier_add_phases(rpcsvc_request_t *req, glusterd_op_t op,
                                       dict_t *dict)
 {
     int32_t ret = -1;
@@ -2948,13 +2957,15 @@ glusterd_mgmt_v3_initiate_snap_phases(rpcsvc_request_t *req, glusterd_op_t op,
         goto out;
     }
 
-    /* quorum check of the volume is done here */
-    ret = glusterd_snap_quorum_check(req_dict, _gf_false, &op_errstr,
-                                     &op_errno);
-    if (ret) {
-        gf_msg(this->name, GF_LOG_WARNING, 0, GD_MSG_QUORUM_CHECK_FAIL,
-               "Volume quorum check failed");
-        goto out;
+    if (op == GD_OP_SNAP) {
+        /* quorum check of the volume is done here */
+        ret = glusterd_snap_quorum_check(req_dict, _gf_false, &op_errstr,
+                                         &op_errno);
+        if (ret) {
+            gf_msg(this->name, GF_LOG_WARNING, 0, GD_MSG_QUORUM_CHECK_FAIL,
+                   "Volume quorum check failed");
+            goto out;
+        }
     }
 
     /* Set the operation type as pre, so that differentiation can be
@@ -2994,11 +3005,13 @@ glusterd_mgmt_v3_initiate_snap_phases(rpcsvc_request_t *req, glusterd_op_t op,
        above and along with it the originator glusterd also goes down?
        Who will initiate the cleanup?
     */
-    ret = dict_set_int32n(req_dict, "cleanup", SLEN("cleanup"), 1);
-    if (ret) {
-        gf_msg(this->name, GF_LOG_ERROR, 0, GD_MSG_DICT_SET_FAILED,
-               "failed to set dict");
-        goto unbarrier;
+    if (op==GD_OP_SNAP) {
+        ret = dict_set_int32n(req_dict, "cleanup", SLEN("cleanup"), 1);
+        if (ret) {
+            gf_msg(this->name, GF_LOG_ERROR, 0, GD_MSG_DICT_SET_FAILED,
+                   "failed to set dict");
+            goto unbarrier;
+        }
     }
 
     ret = glusterd_mgmt_v3_commit(op, dict, req_dict, &op_errstr, &op_errno,
@@ -3039,7 +3052,7 @@ unbarrier:
     }
 
     /*Do a quorum check if the commit phase is successful*/
-    if (success) {
+    if ((op == GD_OP_SNAP) && success) {
         // quorum check of the snapshot volume
         ret = glusterd_snap_quorum_check(dict, _gf_true, &op_errstr, &op_errno);
         if (ret) {
@@ -3070,11 +3083,10 @@ out:
     (void)glusterd_mgmt_v3_release_peer_locks(op, dict, op_ret, &op_errstr,
                                               is_acquired, txn_generation);
 
-    /* If the commit op (snapshot taking) failed, then the error is stored
-       in cli_errstr and unbarrier is called. Suppose, if unbarrier also
-       fails, then the error happened in unbarrier is logged and freed.
-       The error happened in commit op, which is stored in cli_errstr
-       is sent to cli.
+    /* If the commit op failed, then the error is stored in cli_errstr
+       and unbarrier is called. Suppose, if unbarrier also fails, then
+       the error happened in unbarrier is logged and freed. The error
+       happened in commit op, which is stored in cli_errstr is sent to cli.
     */
     if (cli_errstr) {
         GF_FREE(op_errstr);

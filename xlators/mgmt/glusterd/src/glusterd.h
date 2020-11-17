@@ -1004,6 +1004,9 @@ int32_t
 glusterd_remove_brick(rpcsvc_request_t *req, dict_t *dict);
 
 int32_t
+glusterd_remove_brick_brickop(xlator_t *this, dict_t *dict, char **op_errstr);
+
+int32_t
 glusterd_set_volume(rpcsvc_request_t *req, dict_t *dict);
 
 int32_t

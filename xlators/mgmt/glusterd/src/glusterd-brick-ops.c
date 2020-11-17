@@ -865,7 +865,7 @@ __glusterd_handle_remove_brick(rpcsvc_request_t *req)
                      GD_OP_VERSION_8_0);
         ret = glusterd_op_begin_synctask(req, GD_OP_REMOVE_BRICK, dict);
     } else {
-        ret = glusterd_mgmt_v3_initiate_all_phases(req, GD_OP_REMOVE_BRICK,
+        ret = glusterd_mgmt_v3_initiate_phases_with_brick_op_and_barrier_add_phases(req, GD_OP_REMOVE_BRICK,
                                                    dict);
     }
 
@@ -897,6 +897,62 @@ int
 glusterd_handle_remove_brick(rpcsvc_request_t *req)
 {
     return glusterd_big_locked_handler(req, __glusterd_handle_remove_brick);
+}
+
+int32_t
+glusterd_remove_brick_brickop(xlator_t *this, dict_t *dict, char **op_errstr)
+{
+    int ret = -1;
+    char *op_type = NULL;
+
+    GF_ASSERT(this);
+    GF_ASSERT(dict);
+
+    /* op_type with tell us whether its pre-commit operation
+     * or post-commit
+     */
+    ret = dict_get_strn(dict, "operation-type", SLEN("operation-type"),
+                        &op_type);
+    if (ret) {
+        gf_msg(this->name, GF_LOG_ERROR, 0, GD_MSG_DICT_GET_FAILED,
+               "Failed to fetch "
+               "operation type");
+        goto out;
+    }
+
+    if (strcmp(op_type, "pre") == 0) {
+        /* BRICK OP PHASE for enabling barrier, Enable barrier
+         * if its a pre-commit operation
+         */
+        ret = glusterd_set_barrier_value(dict, "enable");
+        if (ret) {
+            gf_msg(this->name, GF_LOG_ERROR, 0, GD_MSG_DICT_SET_FAILED,
+                   "Failed to "
+                   "set barrier value as enable in dict");
+            goto out;
+        }
+    } else if (strcmp(op_type, "post") == 0) {
+        /* BRICK OP PHASE for disabling barrier, Disable barrier
+         * if its a post-commit operation
+         */
+        ret = glusterd_set_barrier_value(dict, "disable");
+        if (ret) {
+            gf_msg(this->name, GF_LOG_ERROR, 0, GD_MSG_DICT_GET_FAILED,
+                   "Failed to "
+                   "set barrier value as disable in "
+                   "dict");
+            goto out;
+        }
+    } else {
+        ret = -1;
+        gf_msg(this->name, GF_LOG_ERROR, EINVAL, GD_MSG_INVALID_ENTRY,
+               "Invalid op_type");
+        goto out;
+    }
+    ret = gd_brick_op_phase(GD_OP_REMOVE_BRICK, NULL, dict, op_errstr);
+
+out:
+    return ret;
 }
 
 static int

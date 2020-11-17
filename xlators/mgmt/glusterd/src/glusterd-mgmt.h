@@ -45,7 +45,7 @@ glusterd_mgmt_v3_initiate_all_phases_with_brickop_phase(rpcsvc_request_t *req,
                                                         dict_t *dict);
 
 int32_t
-glusterd_mgmt_v3_initiate_snap_phases(rpcsvc_request_t *req, glusterd_op_t op,
+glusterd_mgmt_v3_initiate_phases_with_brick_op_and_barrier_add_phases(rpcsvc_request_t *req, glusterd_op_t op,
                                       dict_t *dict);
 
 int

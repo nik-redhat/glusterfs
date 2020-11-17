@@ -4045,7 +4045,7 @@ glusterd_handle_snapshot_create(rpcsvc_request_t *req, glusterd_op_t op,
         }
     }
 
-    ret = glusterd_mgmt_v3_initiate_snap_phases(req, op, dict);
+    ret = glusterd_mgmt_v3_initiate_phases_with_brick_op_and_barrier_add_phases(req, op, dict);
     if (ret) {
         gf_msg(this->name, GF_LOG_ERROR, 0, GD_MSG_SNAP_INIT_FAIL,
                "Failed to initiate snap "
@@ -4085,7 +4085,7 @@ glusterd_handle_snapshot_status(rpcsvc_request_t *req, glusterd_op_t op,
     GF_ASSERT(dict);
     GF_ASSERT(err_str);
 
-    ret = glusterd_mgmt_v3_initiate_snap_phases(req, op, dict);
+    ret = glusterd_mgmt_v3_initiate_phases_with_brick_op_and_barrier_add_phases(req, op, dict);
     if (ret) {
         gf_msg(this->name, GF_LOG_ERROR, 0, GD_MSG_SNAP_INIT_FAIL,
                "Failed to initiate "
@@ -4237,7 +4237,7 @@ glusterd_handle_snapshot_clone(rpcsvc_request_t *req, glusterd_op_t op,
         goto out;
     }
 
-    ret = glusterd_mgmt_v3_initiate_snap_phases(req, op, dict);
+    ret = glusterd_mgmt_v3_initiate_phases_with_brick_op_and_barrier_add_phases(req, op, dict);
     if (ret) {
         gf_msg(this->name, GF_LOG_ERROR, 0, GD_MSG_SNAP_INIT_FAIL,
                "Failed to initiate "
@@ -4331,7 +4331,7 @@ glusterd_handle_snapshot_restore(rpcsvc_request_t *req, glusterd_op_t op,
         goto out;
     }
 
-    ret = glusterd_mgmt_v3_initiate_snap_phases(req, op, dict);
+    ret = glusterd_mgmt_v3_initiate_phases_with_brick_op_and_barrier_add_phases(req, op, dict);
     if (ret) {
         gf_msg(this->name, GF_LOG_ERROR, 0, GD_MSG_SNAP_INIT_FAIL,
                "Failed to initiate snap phases");
@@ -5748,7 +5748,7 @@ glusterd_handle_snapshot_delete_type_snap(rpcsvc_request_t *req,
         goto out;
     }
 
-    ret = glusterd_mgmt_v3_initiate_snap_phases(req, op, dict);
+    ret = glusterd_mgmt_v3_initiate_phases_with_brick_op_and_barrier_add_phases(req, op, dict);
     if (ret) {
         gf_msg(this->name, GF_LOG_ERROR, 0, GD_MSG_SNAP_INIT_FAIL,
                "Failed to initiate snap "
@@ -9449,14 +9449,14 @@ glusterd_handle_snapshot_fn(rpcsvc_request_t *req)
             }
             break;
         case GF_SNAP_OPTION_TYPE_ACTIVATE:
-            ret = glusterd_mgmt_v3_initiate_snap_phases(req, cli_op, dict);
+            ret = glusterd_mgmt_v3_initiate_phases_with_brick_op_and_barrier_add_phases(req, cli_op, dict);
             if (ret) {
                 gf_msg(this->name, GF_LOG_WARNING, 0, GD_MSG_SNAP_ACTIVATE_FAIL,
                        "Snapshot activate failed: %s", err_str);
             }
             break;
         case GF_SNAP_OPTION_TYPE_DEACTIVATE:
-            ret = glusterd_mgmt_v3_initiate_snap_phases(req, cli_op, dict);
+            ret = glusterd_mgmt_v3_initiate_phases_with_brick_op_and_barrier_add_phases(req, cli_op, dict);
             if (ret) {
                 gf_msg(this->name, GF_LOG_WARNING, 0,
                        GD_MSG_SNAP_DEACTIVATE_FAIL,
