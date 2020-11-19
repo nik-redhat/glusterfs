@@ -1786,7 +1786,7 @@ match(struct cds_lfht_node *tmp_node, const void *_key)
     glusterd_volinfo_node *node = caa_container_of(tmp_node,
                                                    glusterd_volinfo_node, next);
 
-    return strncmp((const char *)_key, node->volname, strlen((const char *)_key)) == 0;
+    return strcmp((const char *)_key, node->volname) == 0;
 }
 
 int32_t
