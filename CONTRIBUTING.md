@@ -2,7 +2,7 @@
 
 ## Development Workflow
 
-We follow most of the details as per the [document here](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests). If you are not aware of the github workflow, it is recommended to go through them before continuing here.
+We follow most of the details as per  the [document here](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests). If you are not aware of the github workflow, it is recommended to go through them before continuing here.
 
 
 #### Get the Repository setup
